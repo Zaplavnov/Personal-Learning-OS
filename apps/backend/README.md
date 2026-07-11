@@ -38,3 +38,7 @@ python -m app.db.seed_learning_spaces
 ```
 
 Поддерживаются ссылки на видео, статьи, книги/главы, notebooks и repositories. События `material.created`, `learning_session.started`, `note.created` и `learning_activity.completed` записываются в transactional outbox; worker на этом этапе не запускается.
+
+## Concepts и knowledge graph
+
+Модуль `app/modules/concepts` хранит концепции и типизированные семантические связи внутри Learning Space. API поддерживает CRUD концепций, создание/удаление связей и read model `/api/v1/knowledge-graph`. Knowledge graph не смешивается с отдельным графом учебного пути.

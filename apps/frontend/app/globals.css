@@ -766,12 +766,57 @@ button {
   margin-top: 28px;
   height: 650px;
 }
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+.graph-toolbar select,
+.graph-toolbar label {
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--ink);
+  background: var(--surface);
+}
+.graph-toolbar select {
+  min-width: 220px;
+  padding: 0 12px;
+}
+.graph-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+.graph-toolbar label svg {
+  width: 16px;
+  color: var(--muted);
+}
+.graph-toolbar input {
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+}
 .knowledge-canvas {
   position: relative;
   overflow: hidden;
   background-color: var(--surface);
   background-image: radial-gradient(var(--border) 0.7px, transparent 0.7px);
   background-size: 22px 22px;
+}
+.graph-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.graph-edges line {
+  stroke: var(--border);
+  stroke-width: 1.5;
 }
 .concept-node {
   position: absolute;
@@ -914,6 +959,35 @@ button {
 }
 .concept-panel h4 {
   font-size: 12px;
+}
+.concept-aliases {
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 11px !important;
+}
+.relation-list {
+  display: grid;
+  gap: 8px;
+}
+.relation-list > p {
+  color: var(--muted);
+  font-size: 11px;
+}
+.relation-list > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.relation-list span {
+  color: var(--muted);
+  font-size: 9px;
+}
+.relation-list b {
+  font-size: 11px;
 }
 .concept-panel .skill {
   padding: 14px 0;
@@ -1757,6 +1831,14 @@ textarea:focus-visible {
   }
   .graph-layout {
     margin-top: 18px;
+  }
+  .graph-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .graph-toolbar select,
+  .graph-toolbar label {
+    width: 100%;
   }
   .knowledge-canvas {
     height: 500px;

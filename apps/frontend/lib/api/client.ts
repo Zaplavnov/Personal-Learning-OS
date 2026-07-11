@@ -133,6 +133,48 @@ export type Note = {
   updated_at: string;
 };
 
+export type ConceptStatus = "active" | "archived";
+export type ConceptRelationType =
+  | "prerequisite_of"
+  | "depends_on"
+  | "part_of"
+  | "example_of"
+  | "generalization_of"
+  | "special_case_of"
+  | "contrasts_with"
+  | "often_confused_with"
+  | "used_in"
+  | "derived_from"
+  | "analogous_to"
+  | "explains"
+  | "implemented_by";
+
+export type Concept = {
+  id: string;
+  user_id: string;
+  learning_space_id: string;
+  title: string;
+  description: string | null;
+  aliases: string[];
+  status: ConceptStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ConceptRelation = {
+  id: string;
+  learning_space_id: string;
+  source_concept_id: string;
+  target_concept_id: string;
+  relation_type: ConceptRelationType;
+  description: string | null;
+};
+
+export type KnowledgeGraph = {
+  concepts: Concept[];
+  relations: ConceptRelation[];
+};
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -259,6 +301,31 @@ export const backendApi = {
     note_type: NoteType;
   }) =>
     apiRequest<Note>("/api/v1/notes", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getKnowledgeGraph: (learningSpaceId: string, signal?: AbortSignal) =>
+    apiRequest<KnowledgeGraph>(
+      `/api/v1/knowledge-graph?learning_space_id=${encodeURIComponent(learningSpaceId)}`,
+      { signal, cache: "no-store" },
+    ),
+  createConcept: (payload: {
+    learning_space_id: string;
+    title: string;
+    description: string | null;
+    aliases: string[];
+  }) =>
+    apiRequest<Concept>("/api/v1/concepts", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  createConceptRelation: (payload: {
+    source_concept_id: string;
+    target_concept_id: string;
+    relation_type: ConceptRelationType;
+    description: string | null;
+  }) =>
+    apiRequest<ConceptRelation>("/api/v1/concept-relations", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

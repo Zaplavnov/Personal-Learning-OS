@@ -108,5 +108,6 @@ Health endpoints:
 
 - Learning Space и Learning Goal;
 - материал → учебная сессия → заметка с transactional outbox.
+- concepts и типизированный knowledge graph.
 
 Продуктовое и архитектурное описание находится в [docs](docs/).
