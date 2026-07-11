@@ -104,4 +104,9 @@ Health endpoints:
 - `GET /health/ready` — выполняет проверку соединения с PostgreSQL;
 - `GET /api/v1/meta` — возвращает имя, версию и окружение API.
 
+Реализованные продуктовые вертикали:
+
+- Learning Space и Learning Goal;
+- материал → учебная сессия → заметка с transactional outbox.
+
 Продуктовое и архитектурное описание находится в [docs](docs/).

@@ -8,33 +8,6 @@ export const concepts = [
   ["PCA", "не изучено", "locked"],
 ] as const;
 
-export const materials = [
-  ["Курс", "Essence of Linear Algebra", "3Blue1Brown", "8 из 16 глав", "61%"],
-  ["Книга", "Linear Algebra Done Right", "Sheldon Axler", "Глава 5", "34%"],
-  [
-    "Видео",
-    "Eigenvectors and eigenvalues",
-    "MIT OpenCourseWare",
-    "Следующий фрагмент: 18:42",
-    "18%",
-  ],
-  [
-    "Notebook",
-    "Линейные преобразования в Python",
-    "Собственная практика",
-    "4 задачи",
-    "75%",
-  ],
-  [
-    "Статья",
-    "A geometric understanding of matrices",
-    "Better Explained",
-    "12 минут",
-    "0%",
-  ],
-  ["Заметки", "Конспекты по линалу", "Obsidian", "24 заметки", "—"],
-] as const;
-
 export const weekDays = [
   "Пн 25",
   "Вт 26",

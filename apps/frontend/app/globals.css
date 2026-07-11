@@ -948,6 +948,8 @@ button {
   grid-template-columns: 90px 1fr;
   gap: 15px;
   min-height: 150px;
+  color: inherit;
+  text-decoration: none;
 }
 .material-cover {
   border-radius: 10px;
@@ -1413,6 +1415,188 @@ button {
   color: var(--red);
   font-size: 12px;
 }
+.material-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.material-toolbar select,
+.entity-form select,
+.note-controls select {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--ink);
+  background: var(--surface);
+}
+.material-form {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.material-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  margin-top: 28px;
+}
+.material-detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.material-overview,
+.session-card,
+.quick-note,
+.notes-panel {
+  padding: 24px;
+}
+.material-overview > p {
+  line-height: 1.7;
+}
+.session-card h2 {
+  margin: 8px 0;
+}
+.position-field,
+.completion-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 16px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.position-field input,
+.completion-form input,
+.note-controls input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--ink);
+  background: var(--bg);
+}
+.session-live {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.session-live .online {
+  width: 10px;
+  height: 10px;
+}
+.session-live div {
+  display: flex;
+  flex-direction: column;
+}
+.session-live small {
+  color: var(--muted);
+}
+.session-live strong {
+  margin-top: 3px;
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+}
+.completion-form textarea,
+.quick-note textarea {
+  min-height: 110px;
+  padding: 13px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: none;
+  color: var(--ink);
+  background: var(--bg);
+}
+.completion-form textarea {
+  width: 100%;
+}
+.quick-note textarea {
+  width: 100%;
+  margin-top: 16px;
+}
+.completion-form textarea:focus,
+.quick-note textarea:focus {
+  border-color: var(--blue);
+}
+.note-controls {
+  display: flex;
+  gap: 9px;
+  margin-top: 10px;
+}
+.note-controls input {
+  min-width: 0;
+  flex: 1;
+}
+.note-controls .primary {
+  margin-left: auto;
+}
+.notes-panel {
+  min-height: 500px;
+}
+.notes-panel .card-title > span {
+  display: grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--blue);
+  background: var(--blue-soft);
+  font-size: 11px;
+}
+.notes-empty {
+  padding: 70px 10px;
+  text-align: center;
+  color: var(--muted);
+}
+.notes-empty span {
+  font-size: 11px;
+}
+.notes-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+.notes-list article {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.notes-list article > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.notes-list article small,
+.notes-list time {
+  color: var(--muted);
+  font-size: 9px;
+}
+.notes-list p {
+  margin: 12px 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.status-pill.insight {
+  color: var(--sage);
+  background: var(--sage-soft);
+}
+.status-pill.question,
+.status-pill.gap {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+.status-pill.example,
+.status-pill.general {
+  color: var(--blue);
+  background: var(--blue-soft);
+}
 .inline-error {
   padding: 10px 14px;
   border-radius: 8px;
@@ -1455,6 +1639,9 @@ textarea:focus-visible {
     grid-template-columns: repeat(2, 1fr);
   }
   .spaces-grid {
+    grid-template-columns: 1fr;
+  }
+  .material-detail-grid {
     grid-template-columns: 1fr;
   }
   .concept-panel {
@@ -1532,6 +1719,24 @@ textarea:focus-visible {
   }
   .material-grid {
     grid-template-columns: 1fr;
+  }
+  .material-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .material-toolbar .filters {
+    margin-bottom: 0;
+    overflow-x: auto;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .note-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .note-controls .primary {
+    margin-left: 0;
   }
   .space-hero {
     align-items: flex-start;

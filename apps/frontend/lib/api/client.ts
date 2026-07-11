@@ -66,6 +66,73 @@ export type LearningGoalCreate = {
   completion_criteria?: string[];
 };
 
+export type MaterialType =
+  | "video"
+  | "article"
+  | "book"
+  | "notebook"
+  | "repository"
+  | "other";
+export type MaterialStatus = "active" | "completed" | "archived";
+export type LearningSessionStatus = "active" | "completed" | "abandoned";
+export type NoteType = "insight" | "question" | "gap" | "example" | "general";
+
+export type LearningSession = {
+  id: string;
+  material_id: string;
+  user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  start_position_seconds: number | null;
+  end_position_seconds: number | null;
+  reflection: string | null;
+  status: LearningSessionStatus;
+};
+
+export type Material = {
+  id: string;
+  user_id: string;
+  learning_space_id: string;
+  type: MaterialType;
+  title: string;
+  url: string | null;
+  author: string | null;
+  description: string | null;
+  status: MaterialStatus;
+  estimated_minutes: number | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MaterialDetail = Material & {
+  active_session: LearningSession | null;
+};
+
+export type MaterialCreate = {
+  learning_space_id: string;
+  type: MaterialType;
+  title: string;
+  url?: string | null;
+  author?: string | null;
+  description?: string | null;
+  estimated_minutes?: number | null;
+  metadata?: Record<string, unknown>;
+};
+
+export type Note = {
+  id: string;
+  user_id: string;
+  learning_space_id: string;
+  material_id: string | null;
+  learning_session_id: string | null;
+  body: string;
+  source_position_seconds: number | null;
+  note_type: NoteType;
+  created_at: string;
+  updated_at: string;
+};
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -134,5 +201,65 @@ export const backendApi = {
   activateLearningGoal: (goalId: string) =>
     apiRequest<LearningGoal>(`/api/v1/learning-goals/${goalId}/activate`, {
       method: "POST",
+    }),
+  listMaterials: (
+    filters: { learningSpaceId?: string; type?: MaterialType } = {},
+    signal?: AbortSignal,
+  ) => {
+    const params = new URLSearchParams();
+    if (filters.learningSpaceId)
+      params.set("learning_space_id", filters.learningSpaceId);
+    if (filters.type) params.set("type", filters.type);
+    const query = params.size ? `?${params.toString()}` : "";
+    return apiRequest<Material[]>(`/api/v1/materials${query}`, {
+      signal,
+      cache: "no-store",
+    });
+  },
+  getMaterial: (materialId: string, signal?: AbortSignal) =>
+    apiRequest<MaterialDetail>(`/api/v1/materials/${materialId}`, {
+      signal,
+      cache: "no-store",
+    }),
+  createMaterial: (payload: MaterialCreate) =>
+    apiRequest<Material>("/api/v1/materials", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  startLearningSession: (
+    materialId: string,
+    startPositionSeconds: number | null,
+  ) =>
+    apiRequest<LearningSession>(`/api/v1/materials/${materialId}/sessions`, {
+      method: "POST",
+      body: JSON.stringify({ start_position_seconds: startPositionSeconds }),
+    }),
+  completeLearningSession: (
+    sessionId: string,
+    payload: { end_position_seconds: number | null; reflection: string | null },
+  ) =>
+    apiRequest<LearningSession>(
+      `/api/v1/learning-sessions/${sessionId}/complete`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
+  listMaterialNotes: (materialId: string, signal?: AbortSignal) =>
+    apiRequest<Note[]>(`/api/v1/materials/${materialId}/notes`, {
+      signal,
+      cache: "no-store",
+    }),
+  createNote: (payload: {
+    learning_space_id: string;
+    material_id: string;
+    learning_session_id: string | null;
+    body: string;
+    source_position_seconds: number | null;
+    note_type: NoteType;
+  }) =>
+    apiRequest<Note>("/api/v1/notes", {
+      method: "POST",
+      body: JSON.stringify(payload),
     }),
 };

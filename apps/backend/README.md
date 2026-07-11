@@ -28,3 +28,13 @@ pytest
 ```bash
 python -m app.db.seed_learning_spaces
 ```
+
+## Первая учебная вертикаль
+
+Модуль `app/modules/materials` реализует поток:
+
+```text
+материал → активная учебная сессия → заметка → завершение с reflection
+```
+
+Поддерживаются ссылки на видео, статьи, книги/главы, notebooks и repositories. События `material.created`, `learning_session.started`, `note.created` и `learning_activity.completed` записываются в transactional outbox; worker на этом этапе не запускается.
