@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={href}
               href={href}
-              className={pathname === href ? "active" : ""}
+              className={pathname === href || pathname.startsWith(`${href}/`) ? "active" : ""}
               onClick={() => setOpen(false)}
             >
               <Icon />

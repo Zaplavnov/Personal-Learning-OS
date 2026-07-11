@@ -175,6 +175,67 @@ export type KnowledgeGraph = {
   relations: ConceptRelation[];
 };
 
+export type KnowledgeDimension =
+  | "recall"
+  | "explanation"
+  | "structure"
+  | "comparison"
+  | "application"
+  | "hypothesis_generation"
+  | "stability";
+export type EvidenceType =
+  | "viewed"
+  | "note_created"
+  | "user_explanation"
+  | "review_answer"
+  | "task_solved"
+  | "applied_in_project"
+  | "manual_adjustment";
+
+export type ConceptEvidence = {
+  id: string;
+  concept_id: string;
+  evidence_type: EvidenceType;
+  dimension: KnowledgeDimension;
+  score_delta: number;
+  strength: number;
+  source_type: string;
+  source_id: string | null;
+  metadata: Record<string, unknown>;
+  occurred_at: string;
+};
+
+export type ConceptState = {
+  concept_id: string;
+  recall: number;
+  explanation: number;
+  structure: number;
+  comparison: number;
+  application: number;
+  hypothesis_generation: number;
+  stability: number;
+  confidence: number;
+  last_evidence_at: string | null;
+  next_review_at: string | null;
+  version: number;
+  updated_at: string;
+  evidence_count: number;
+  recent_evidence: ConceptEvidence[];
+};
+
+export type ReviewType = "recall" | "explain" | "compare" | "apply" | "structure";
+export type ReviewResult = "failed" | "partial" | "passed";
+export type ReviewItem = {
+  id: string;
+  concept_id: string;
+  review_type: ReviewType;
+  prompt: string;
+  expected_points: string[];
+  status: "pending" | "completed" | "skipped";
+  due_at: string;
+  created_at: string;
+};
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -328,5 +389,58 @@ export const backendApi = {
     apiRequest<ConceptRelation>("/api/v1/concept-relations", {
       method: "POST",
       body: JSON.stringify(payload),
+    }),
+  getConcept: (conceptId: string, signal?: AbortSignal) =>
+    apiRequest<Concept>(`/api/v1/concepts/${conceptId}`, {
+      signal,
+      cache: "no-store",
+    }),
+  getConceptState: (conceptId: string, signal?: AbortSignal) =>
+    apiRequest<ConceptState>(`/api/v1/concepts/${conceptId}/state`, {
+      signal,
+      cache: "no-store",
+    }),
+  createConceptEvidence: (
+    conceptId: string,
+    payload: {
+      evidence_type: EvidenceType;
+      dimension: KnowledgeDimension;
+      score_delta: number;
+      strength: number | null;
+      source_type: string;
+      metadata: Record<string, unknown>;
+    },
+  ) =>
+    apiRequest<{ evidence: ConceptEvidence; state: ConceptState }>(
+      `/api/v1/concepts/${conceptId}/evidence`,
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
+  listDueReviews: (signal?: AbortSignal) =>
+    apiRequest<ReviewItem[]>("/api/v1/reviews/due", { signal, cache: "no-store" }),
+  createReviewItem: (payload: {
+    concept_id: string;
+    review_type: ReviewType;
+    prompt: string;
+    expected_points: string[];
+    due_at?: string;
+  }) =>
+    apiRequest<ReviewItem>("/api/v1/review-items", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  submitReviewAttempt: (
+    reviewId: string,
+    payload: { answer: string; self_rating: number; result: ReviewResult },
+  ) =>
+    apiRequest<{ attempt: unknown; state: ConceptState; next_review: ReviewItem }>(
+      `/api/v1/review-items/${reviewId}/attempts`,
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
+  skipReview: (reviewId: string) =>
+    apiRequest<ReviewItem>(`/api/v1/review-items/${reviewId}/skip`, { method: "POST" }),
+  rescheduleReview: (reviewId: string, dueAt: string) =>
+    apiRequest<ReviewItem>(`/api/v1/review-items/${reviewId}/reschedule`, {
+      method: "POST",
+      body: JSON.stringify({ due_at: dueAt }),
     }),
 };

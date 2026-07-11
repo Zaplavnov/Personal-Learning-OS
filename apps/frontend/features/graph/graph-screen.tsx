@@ -2,6 +2,7 @@
 
 import { Link2, Network, Plus, Search, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { PageHead } from "@/components/ui/page-head";
 import {
   ApiClientError,
@@ -10,6 +11,7 @@ import {
   type ConceptRelation,
   type ConceptRelationType,
   type KnowledgeGraph,
+  type ConceptState,
   type LearningSpace,
 } from "@/lib/api/client";
 
@@ -37,6 +39,7 @@ export function GraphScreen() {
     concepts: [],
     relations: [],
   });
+  const [states, setStates] = useState<Record<string, ConceptState>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -71,8 +74,22 @@ export function GraphScreen() {
     const controller = new AbortController();
     backendApi
       .getKnowledgeGraph(spaceId, controller.signal)
-      .then((loadedGraph) => {
+      .then(async (loadedGraph) => {
         setGraph(loadedGraph);
+        const loadedStates = await Promise.all(
+          loadedGraph.concepts.map(async (concept) => {
+            try {
+              return await backendApi.getConceptState(concept.id, controller.signal);
+            } catch {
+              return null;
+            }
+          }),
+        );
+        setStates(
+          Object.fromEntries(
+            loadedStates.filter((item): item is ConceptState => item !== null).map((item) => [item.concept_id, item]),
+          ),
+        );
         setSelectedId((current) =>
           loadedGraph.concepts.some((concept) => concept.id === current)
             ? current
@@ -240,16 +257,27 @@ export function GraphScreen() {
                   relation.source_concept_id === concept.id ||
                   relation.target_concept_id === concept.id,
               ).length;
+              const conceptState = states[concept.id];
+              const level = conceptState
+                ? (conceptState.recall + conceptState.explanation + conceptState.application + conceptState.stability) / 4
+                : 0;
+              const stateClass = !conceptState || conceptState.evidence_count === 0
+                ? "locked"
+                : level >= 60
+                  ? "mastered"
+                  : conceptState.application < 15 || conceptState.explanation < 15
+                    ? "gap"
+                    : "active";
               return (
                 <button
                   style={{ left: `${position.x}%`, top: `${position.y}%` }}
                   key={concept.id}
                   onClick={() => setSelectedId(concept.id)}
-                  className={`concept-node active ${selectedId === concept.id ? "selected" : ""}`}
+                  className={`concept-node ${stateClass} ${selectedId === concept.id ? "selected" : ""}`}
                   type="button"
                 >
                   <span>{concept.title}</span>
-                  <small>{relationCount} связей</small>
+                  <small>{conceptState?.evidence_count ? `${Math.round(level)}% · ${relationCount} связей` : "нет evidence"}</small>
                 </button>
               );
             })}
@@ -293,6 +321,17 @@ export function GraphScreen() {
                     <span>входящих</span>
                   </div>
                 </div>
+                {states[selected.id] && (
+                  <div className="graph-state-summary">
+                    <span>Recall <b>{Math.round(states[selected.id].recall)}%</b></span>
+                    <span>Explanation <b>{Math.round(states[selected.id].explanation)}%</b></span>
+                    <span>Application <b>{Math.round(states[selected.id].application)}%</b></span>
+                    <span>Confidence <b>{Math.round(states[selected.id].confidence * 100)}%</b></span>
+                  </div>
+                )}
+                <Link className="secondary concept-detail-link" href={`/concepts/${selected.id}`}>
+                  Открыть состояние
+                </Link>
                 <h4>Связи концепции</h4>
                 <div className="relation-list">
                   {selectedRelations.length === 0 ? (

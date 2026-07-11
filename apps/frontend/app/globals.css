@@ -1489,6 +1489,194 @@ button {
   color: var(--red);
   font-size: 12px;
 }
+
+.concept-lead {
+  color: var(--muted);
+  font-size: 1.05rem;
+  margin: -0.5rem 0 1.5rem;
+  max-width: 760px;
+}
+
+.knowledge-state-layout {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.knowledge-dimensions,
+.evidence-timeline {
+  padding: 1.5rem;
+}
+
+.dimension-row {
+  margin-top: 1.1rem;
+}
+
+.dimension-row > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.dimension-row span,
+.dimension-row b {
+  font-size: 0.9rem;
+}
+
+.confidence-note,
+.next-review {
+  background: var(--surface-2);
+  border-radius: 14px;
+  margin-top: 1.4rem;
+  padding: 1rem;
+}
+
+.confidence-note p {
+  color: var(--muted);
+  margin: 0.35rem 0 0;
+}
+
+.evidence-timeline article {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+}
+
+.evidence-timeline article > div {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.evidence-timeline article time,
+.evidence-timeline article small,
+.evidence-timeline article p {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.evidence-timeline article p {
+  margin: 0.4rem 0;
+}
+
+.review-queue {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.review-queue-item {
+  align-items: center;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: auto 1fr auto;
+  padding: 1.2rem;
+}
+
+.review-queue-item h2 {
+  font-size: 1rem;
+  margin: 0.25rem 0 0;
+}
+
+.review-queue-item small {
+  color: var(--muted);
+}
+
+.queue-number {
+  align-items: center;
+  background: var(--blue-soft);
+  border-radius: 50%;
+  color: var(--blue);
+  display: flex;
+  height: 2.25rem;
+  justify-content: center;
+  width: 2.25rem;
+}
+
+.review-session {
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.review-rating {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 1rem;
+}
+
+.review-rating label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.review-rating select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 0.7rem;
+}
+
+.review-secondary-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.review-secondary-actions button {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.expected-points {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 1rem;
+}
+
+.graph-state-summary {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: 1fr 1fr;
+  margin: 1rem 0;
+}
+
+.graph-state-summary span {
+  background: var(--surface-2);
+  border-radius: 10px;
+  color: var(--muted);
+  display: flex;
+  font-size: 0.78rem;
+  justify-content: space-between;
+  padding: 0.65rem;
+}
+
+.concept-detail-link {
+  display: inline-flex;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .knowledge-state-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .review-queue-item {
+    grid-template-columns: auto 1fr;
+  }
+
+  .review-queue-item .secondary {
+    grid-column: 1 / -1;
+  }
+
+  .review-rating {
+    grid-template-columns: 1fr;
+  }
+}
 .material-toolbar {
   display: flex;
   align-items: center;
