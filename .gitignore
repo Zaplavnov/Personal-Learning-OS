@@ -211,6 +211,11 @@ dist/
 .sites-runtime/
 npm-debug.log*
 
+# Frontend source directories that overlap Python virtualenv ignore patterns above
+!apps/frontend/lib/
+!apps/frontend/lib/api/
+!apps/frontend/lib/api/client.ts
+
 # Ruff stuff:
 .ruff_cache/
 

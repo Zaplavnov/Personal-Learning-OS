@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { navigation } from "@/lib/navigation";
+import { BackendStatus } from "./backend-status";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="sidebar-foot">
+          <BackendStatus />
           <div className="sync"><span className="online" /> Obsidian синхронизирован</div>
           <div className="profile">
             <div className="avatar">Д</div>
