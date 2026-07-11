@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     app_environment: str = "development"
     log_level: str = "INFO"
     database_url: str = Field(
-        default="postgresql+asyncpg://plos:plos_dev@localhost:5432/plos",
+        default="postgresql+asyncpg://plos:plos_local_dev@localhost:5432/plos",
         repr=False,
     )
     frontend_origin: str = "http://localhost:3000"

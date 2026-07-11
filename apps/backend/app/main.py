@@ -7,6 +7,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import register_request_middleware
+from app.db import models as _models  # noqa: F401
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

@@ -62,6 +62,12 @@ alembic upgrade head
 python -m app.db.seed
 ```
 
+Демонстрационные Learning Space и Learning Goal добавляются отдельной идемпотентной командой:
+
+```bash
+python -m app.db.seed_learning_spaces
+```
+
 ## Отдельный запуск frontend
 
 ```bash

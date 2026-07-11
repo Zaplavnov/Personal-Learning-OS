@@ -20,3 +20,11 @@ ruff check .
 ruff format --check .
 pytest
 ```
+
+## Демонстрационные Learning Space и Goal
+
+После применения миграций seed можно запускать повторно:
+
+```bash
+python -m app.db.seed_learning_spaces
+```
