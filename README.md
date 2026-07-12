@@ -40,6 +40,17 @@ docker compose up --build
 
 Backend-контейнер перед запуском API выполняет `alembic upgrade head` и идемпотентный seed локального пользователя. Остановка: `docker compose down`. Для удаления локальных данных PostgreSQL: `docker compose down -v`.
 
+### Первый запуск с демонстрационным учебным циклом
+
+После старта сервисов выполните идемпотентный demo seed и откройте экран Today:
+
+```bash
+docker compose exec backend python -m app.db.seed_demo
+docker compose exec backend alembic current
+```
+
+Откройте <http://localhost:3000/today>. Демонстрационные данные включают пространство «Линейная алгебра», активную цель, три материала, активную учебную сессию, четыре заметки, семь связанных концепций с разными knowledge states, два due review и дневной календарь. Повторный запуск команды не создаёт дубли и не возвращает завершённые reviews в pending.
+
 ## Отдельный запуск backend
 
 Запустите PostgreSQL 16 и задайте `DATABASE_URL`, затем:
@@ -66,6 +77,12 @@ python -m app.db.seed
 
 ```bash
 python -m app.db.seed_learning_spaces
+```
+
+Полный demo seed:
+
+```bash
+python -m app.db.seed_demo
 ```
 
 ## Отдельный запуск frontend
@@ -96,7 +113,11 @@ cd apps/frontend
 npm run lint
 npm run typecheck
 npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
+
+E2E ожидает запущенный Compose-стек и demo seed.
 
 Health endpoints:
 
@@ -109,5 +130,26 @@ Health endpoints:
 - Learning Space и Learning Goal;
 - материал → учебная сессия → заметка с transactional outbox.
 - concepts и типизированный knowledge graph.
+- rule-based Knowledge State и self-rated reviews;
+- детерминированный scheduler, Today read model и календарь.
+
+## Backup PostgreSQL
+
+Для обычного восстановления рекомендуется логический backup:
+
+```bash
+docker compose exec -T postgres pg_dump --clean --if-exists -U plos -d plos > plos-backup.sql
+docker compose exec -T postgres psql -U plos -d plos < plos-backup.sql
+```
+
+Перед файловым backup named volume остановите сервисы, чтобы получить согласованный снимок:
+
+```bash
+docker compose down
+docker run --rm -v personal-learning-os_postgres_data:/volume -v "${PWD}:/backup" alpine tar czf /backup/postgres-data.tar.gz -C /volume .
+docker compose up -d
+```
+
+В PowerShell вместо `${PWD}` используйте `$($PWD.Path)`, а для logical restore — `Get-Content plos-backup.sql | docker compose exec -T postgres psql -U plos -d plos`. Для восстановления volume остановите Compose, распакуйте архив в пустой `personal-learning-os_postgres_data` и снова запустите сервисы. Не используйте `docker compose down -v`, пока backup не проверен.
 
 Продуктовое и архитектурное описание находится в [docs](docs/).

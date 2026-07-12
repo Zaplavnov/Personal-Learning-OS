@@ -11,9 +11,11 @@ from app.modules.knowledge_state.infrastructure import (
 from app.modules.learning_spaces.infrastructure import LearningGoal, LearningSpace
 from app.modules.materials.infrastructure import LearningSession, Material, Note
 from app.modules.outbox.models import OutboxEvent
+from app.modules.scheduler.infrastructure import CalendarItem, ScheduleVersion
 from app.modules.users.models import User
 
 __all__ = [
+    "CalendarItem",
     "Concept",
     "ConceptEvidence",
     "ConceptRelation",
@@ -27,5 +29,6 @@ __all__ = [
     "OutboxEvent",
     "ReviewAttempt",
     "ReviewItem",
+    "ScheduleVersion",
     "User",
 ]

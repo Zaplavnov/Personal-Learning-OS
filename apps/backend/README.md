@@ -56,3 +56,13 @@ Review использует выбранные пользователем result
 - `passed` — от 7 до 27 дней в зависимости от stability.
 
 Attempt, два evidence-сигнала, новый review item, обновлённый state и outbox-события `review.answered`/`knowledge_state.updated` фиксируются одной транзакцией.
+
+## Scheduler v0
+
+Модуль `app/modules/scheduler` строит live read model `GET /api/v1/today` и материализованный календарь. Порядок кандидатов фиксирован: overdue review → открытый gap/question → активная material session → слабый prerequisite/concept → active goal → новый материал. Чистая функция сортирует кандидаты и берёт не более пяти действий, сумма которых не превышает `available_minutes`; не поместившиеся действия не переносятся как долг.
+
+```bash
+python -m app.db.seed_demo
+```
+
+Demo seed добавляет воспроизводимый полный цикл и безопасен для повторного запуска.

@@ -210,6 +210,8 @@ dist/
 .wrangler/
 .sites-runtime/
 npm-debug.log*
+playwright-report/
+test-results/
 
 # Frontend source directories that overlap Python virtualenv ignore patterns above
 !apps/frontend/lib/

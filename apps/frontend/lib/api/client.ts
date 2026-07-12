@@ -236,6 +236,63 @@ export type ReviewItem = {
   created_at: string;
 };
 
+export type CalendarItemType =
+  | "material_session"
+  | "review"
+  | "explain"
+  | "practice"
+  | "gap_work";
+export type CalendarItemStatus =
+  | "planned"
+  | "in_progress"
+  | "completed"
+  | "skipped";
+export type TodayAction = {
+  item_type: CalendarItemType;
+  source_type: string;
+  source_id: string | null;
+  learning_space_id: string | null;
+  title: string;
+  estimated_minutes: number;
+  priority: number;
+  rationale: string;
+  action_url: string;
+  target_dimension: string;
+};
+export type TodayReadModel = {
+  available_minutes: number;
+  scheduled_minutes: number;
+  active_space: { id: string; title: string } | null;
+  active_goal: { id: string; title: string } | null;
+  primary_action: TodayAction | null;
+  secondary_actions: TodayAction[];
+  due_review_count: number;
+  open_gap_count: number;
+  knowledge_stability: {
+    average: number;
+    confidence: number;
+    concept_count: number;
+  };
+  next_item: TodayAction | null;
+};
+export type CalendarItem = {
+  id: string;
+  user_id: string;
+  learning_space_id: string | null;
+  item_type: CalendarItemType;
+  source_type: string;
+  source_id: string | null;
+  title: string;
+  planned_start: string | null;
+  estimated_minutes: number;
+  status: CalendarItemStatus;
+  flexibility: "fixed" | "flexible";
+  priority: number;
+  rationale: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -442,5 +499,42 @@ export const backendApi = {
     apiRequest<ReviewItem>(`/api/v1/review-items/${reviewId}/reschedule`, {
       method: "POST",
       body: JSON.stringify({ due_at: dueAt }),
+    }),
+  getToday: (availableMinutes: number, signal?: AbortSignal) =>
+    apiRequest<TodayReadModel>(
+      `/api/v1/today?available_minutes=${availableMinutes}`,
+      { signal, cache: "no-store" },
+    ),
+  listCalendar: (from: string, to: string, signal?: AbortSignal) => {
+    const params = new URLSearchParams({ from, to });
+    return apiRequest<CalendarItem[]>(`/api/v1/calendar?${params}`, {
+      signal,
+      cache: "no-store",
+    });
+  },
+  recalculateCalendar: (availableMinutes: number) =>
+    apiRequest<CalendarItem[]>("/api/v1/calendar/recalculate", {
+      method: "POST",
+      body: JSON.stringify({
+        available_minutes: availableMinutes,
+        reason: "today_time_budget_changed",
+      }),
+    }),
+  updateCalendarItem: (
+    itemId: string,
+    payload: Partial<
+      Pick<
+        CalendarItem,
+        | "planned_start"
+        | "estimated_minutes"
+        | "status"
+        | "flexibility"
+        | "priority"
+      >
+    >,
+  ) =>
+    apiRequest<CalendarItem>(`/api/v1/calendar-items/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
     }),
 };

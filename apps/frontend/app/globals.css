@@ -1677,6 +1677,133 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.time-budget {
+  align-items: center;
+  background: var(--surface-2);
+  border-radius: 14px;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.3rem;
+}
+
+.time-budget button {
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.55rem 0.65rem;
+}
+
+.time-budget button.active {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.time-budget span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  padding-right: 0.5rem;
+}
+
+.focus-copy .rationale {
+  align-items: flex-start;
+  color: var(--muted);
+  display: flex;
+  gap: 0.55rem;
+  line-height: 1.55;
+  max-width: 620px;
+}
+
+.focus-copy .rationale svg {
+  flex: 0 0 auto;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  width: 1.1rem;
+}
+
+.stability-value {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  margin: 2rem 0 1rem;
+}
+
+.stability-value strong {
+  color: var(--blue-dark);
+  font-family: Georgia, serif;
+  font-size: 3rem;
+}
+
+.stability-value span,
+.boundary > p {
+  color: var(--muted);
+}
+
+.secondary-plan {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.real-calendar .week-body {
+  min-height: 430px;
+}
+
+.calendar-event {
+  background: var(--blue-soft);
+  border-left: 3px solid var(--blue);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.45rem;
+  padding: 0.75rem;
+}
+
+.calendar-event.review {
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
+.calendar-event.gap_work {
+  background: var(--red-soft);
+  border-color: var(--red);
+}
+
+.calendar-event small,
+.calendar-event p {
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin: 0;
+}
+
+.calendar-event select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 0.72rem;
+  padding: 0.35rem;
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .time-budget {
+    flex-wrap: wrap;
+  }
+
+  .real-calendar {
+    overflow-x: auto;
+  }
+
+  .real-calendar .week-head,
+  .real-calendar .week-body {
+    min-width: 850px;
+  }
+}
 .material-toolbar {
   display: flex;
   align-items: center;
