@@ -7,12 +7,16 @@ from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
-from app.db.seed_learning_spaces import SPACE_ID, seed_learning_spaces
+from app.db.seed_learning_spaces import GOAL_ID, SPACE_ID, seed_learning_spaces
 from app.db.session import async_session_factory
 from app.modules.concepts.infrastructure import Concept, ConceptRelation
 from app.modules.knowledge_state.domain import KnowledgeDimension
 from app.modules.knowledge_state.infrastructure import ConceptEvidence, ConceptState, ReviewItem
 from app.modules.knowledge_state.scoring import EvidenceSignal, recalculate_state
+from app.modules.learning_paths.application import LearningPathService
+from app.modules.learning_paths.domain import PathStatus
+from app.modules.learning_paths.infrastructure import SqlAlchemyLearningPathRepository
+from app.modules.learning_paths.planner import RuleBasedLearningPathPlanner
 from app.modules.materials.infrastructure import LearningSession, Material, Note
 from app.modules.scheduler.infrastructure import CalendarItem, ScheduleVersion
 
@@ -187,6 +191,21 @@ async def seed_demo() -> None:
                 concept.description = description
             concept_by_title[title] = concept
         await session.flush()
+
+        material_concepts = {
+            MATERIAL_IDS[0]: ["Вектор", "Линейное преобразование"],
+            MATERIAL_IDS[1]: ["Матрица преобразования"],
+            MATERIAL_IDS[2]: ["Собственный вектор"],
+        }
+        for material_id, concept_titles in material_concepts.items():
+            material = await session.get(Material, material_id)
+            if material is not None:
+                material.material_metadata = {
+                    **material.material_metadata,
+                    "concept_ids": [
+                        str(concept_by_title[concept_title].id) for concept_title in concept_titles
+                    ],
+                }
 
         relation_specs = [
             ("Вектор", "Линейное преобразование", "prerequisite_of"),
@@ -377,7 +396,67 @@ async def seed_demo() -> None:
                 )
             )
         await session.commit()
+    await _seed_learning_path(user_id)
     logger.info("demo_seeded", extra={"space_id": str(SPACE_ID)})
+
+
+async def _seed_learning_path(user_id: UUID) -> None:
+    async with async_session_factory() as session:
+        repository = SqlAlchemyLearningPathRepository(session)
+        service = LearningPathService(repository, RuleBasedLearningPathPlanner())
+        path = await repository.get_goal_path(user_id, GOAL_ID)
+        if path is None or path.status not in (PathStatus.ACTIVE.value, PathStatus.DRAFT.value):
+            target = await session.scalar(
+                select(Concept).where(
+                    Concept.learning_space_id == SPACE_ID,
+                    Concept.title == "Диагонализация",
+                )
+            )
+            if target is None:
+                return
+            path = await service.generate_draft(
+                user_id,
+                GOAL_ID,
+                target_concept_ids=[target.id],
+                max_depth=4,
+                title="Учебный путь: геометрия линейных преобразований",
+            )
+        if path.status == PathStatus.DRAFT.value:
+            path = await service.publish(user_id, path.id, path.version)
+
+        nodes = await repository.list_nodes(path.id)
+        resources = await repository.list_resources(path.id)
+        attached_materials = {
+            (resource.node_id, resource.resource_id)
+            for resource in resources
+            if resource.resource_type == "material"
+        }
+        material_targets = [
+            (MATERIAL_IDS[0], "Вектор"),
+            (MATERIAL_IDS[0], "Линейное преобразование"),
+            (MATERIAL_IDS[1], "Матрица преобразования"),
+            (MATERIAL_IDS[2], "Собственный вектор"),
+        ]
+        for material_id, concept_title in material_targets:
+            node = next((item for item in nodes if item.title == concept_title), None)
+            material = await session.get(Material, material_id)
+            if node is None or material is None or (node.id, material_id) in attached_materials:
+                continue
+            _, version = await service.add_resource(
+                user_id,
+                path.id,
+                node.id,
+                path.version,
+                {
+                    "resource_type": "material",
+                    "resource_id": material.id,
+                    "title": material.title,
+                    "is_required": True,
+                    "order_index": 0,
+                    "metadata": {"demo_seed": True},
+                },
+            )
+            path.version = version
 
 
 async def main() -> None:

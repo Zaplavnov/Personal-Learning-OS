@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, CirclePause, Plus, Target, X } from "lucide-react";
+import { ArrowLeft, Check, CirclePause, Network, Plus, Target, X } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { PageHead } from "@/components/ui/page-head";
@@ -8,6 +8,8 @@ import {
   ApiClientError,
   backendApi,
   type LearningGoal,
+  type Concept,
+  type LearningPath,
   type LearningSpace,
 } from "@/lib/api/client";
 
@@ -203,6 +205,7 @@ export function SpaceDetailScreen({ spaceId }: { spaceId: string }) {
                 </small>
               )}
               <div className="goal-actions">
+                <GoalPathAction goal={goal} spaceId={space.id} />
                 {goal.status === "active" ? (
                   <span className="active-marker">
                     <Check /> Активная цель
@@ -236,6 +239,32 @@ export function SpaceDetailScreen({ spaceId }: { spaceId: string }) {
       )}
     </>
   );
+}
+
+function GoalPathAction({ goal, spaceId }: { goal: LearningGoal; spaceId: string }) {
+  const [path, setPath] = useState<LearningPath | null>(null);
+  const [creating, setCreating] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    backendApi.getGoalPath(goal.id, controller.signal).then(setPath).catch(() => undefined);
+    return () => controller.abort();
+  }, [goal.id]);
+  if (path) return <Link className="secondary" href={`/spaces/${spaceId}/paths/${path.id}`}><Network /> Открыть путь</Link>;
+  return <><button className="secondary" onClick={() => setCreating(true)} type="button"><Network /> Построить путь</button>{creating && <GeneratePathModal goal={goal} spaceId={spaceId} onClose={() => setCreating(false)} onCreated={setPath} />}</>;
+}
+
+function GeneratePathModal({ goal, spaceId, onClose, onCreated }: { goal: LearningGoal; spaceId: string; onClose: () => void; onCreated: (path: LearningPath) => void }) {
+  const [concepts, setConcepts] = useState<Concept[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    backendApi.listConcepts(spaceId, controller.signal).then((items) => { setConcepts(items); if (items[0]) setSelected([items[0].id]); }).catch((requestError: unknown) => { if (!controller.signal.aborted) setError(requestError instanceof ApiClientError ? requestError.message : "Не удалось загрузить концепции"); });
+    return () => controller.abort();
+  }, [spaceId]);
+  async function submit(event: FormEvent) { event.preventDefault(); setSaving(true); try { const detail = await backendApi.generateLearningPath(goal.id, { target_concept_ids: selected, max_depth: 4 }); onCreated(detail.path); } catch (requestError) { setError(requestError instanceof ApiClientError ? requestError.message : "Не удалось построить draft"); setSaving(false); } }
+  return <div className="modal-wrap" onClick={onClose}><form className="review-modal entity-form" onClick={(event) => event.stopPropagation()} onSubmit={submit}><button className="close icon-button" onClick={onClose} type="button"><X /></button><p className="accent-label">Rule-based planner v0</p><h2>Целевые концепции пути</h2><p className="muted">Prerequisites добавятся автоматически, но draft останется под твоим контролем.</p><div className="concept-picker">{concepts.map((concept) => <label key={concept.id}><input type="checkbox" checked={selected.includes(concept.id)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, concept.id] : current.filter((id) => id !== concept.id))} />{concept.title}</label>)}</div>{error && <p className="form-error">{error}</p>}<div className="modal-actions"><button className="secondary" onClick={onClose} type="button">Отмена</button><button className="primary" disabled={saving || selected.length === 0} type="submit">{saving ? "Строим…" : "Создать draft"}</button></div></form></div>;
 }
 
 function CreateGoalModal({

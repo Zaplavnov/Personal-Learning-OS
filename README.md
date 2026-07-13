@@ -49,7 +49,7 @@ docker compose exec backend python -m app.db.seed_demo
 docker compose exec backend alembic current
 ```
 
-Откройте <http://localhost:3000/today>. Демонстрационные данные включают пространство «Линейная алгебра», активную цель, три материала, активную учебную сессию, четыре заметки, семь связанных концепций с разными knowledge states, два due review и дневной календарь. Повторный запуск команды не создаёт дубли и не возвращает завершённые reviews в pending.
+Откройте <http://localhost:3000/today>. Демонстрационные данные включают пространство «Линейная алгебра», активную цель, три материала, активную учебную сессию, четыре заметки, семь связанных концепций с разными knowledge states, два due review, дневной календарь и опубликованный учебный путь с ресурсами. Повторный запуск команды не создаёт дубли и не возвращает завершённые reviews в pending.
 
 ## Отдельный запуск backend
 
@@ -132,6 +132,13 @@ Health endpoints:
 - concepts и типизированный knowledge graph.
 - rule-based Knowledge State и self-rated reviews;
 - детерминированный scheduler, Today read model и календарь.
+- совместно настраиваемый Learning Path: rule-based draft, направленный граф и outline, ресурсы узлов, completion policy, suggestions и version restore.
+
+## Учебный путь
+
+Путь открывается из активной Learning Goal кнопкой «Построить путь» или «Открыть путь». Planner v0 детерминированно берёт выбранные target concepts, рекурсивно добавляет `prerequisite_of`, учитывает Knowledge State и прикрепляет только материалы с явным `metadata.concept_ids`. Если ресурс неизвестен, UI показывает предупреждение — система ничего не выдумывает.
+
+После публикации current/available required node resources участвуют в Scheduler и Today. Структурные изменения active path требуют `expected_version`, создают immutable snapshot в `learning_path_versions`, а конфликт возвращает HTTP 409. Слабый prerequisite, которого нет в пути, создаёт pending remediation suggestion; ветка появляется только после Accept.
 
 ## Backup PostgreSQL
 

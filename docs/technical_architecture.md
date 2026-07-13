@@ -2580,3 +2580,29 @@ AI-наставник
 Первой такой вертикалью должна стать:
 
 > **материал → учебная сессия → заметка → концепция → проверка → обновление понимания → следующее действие**.
+
+---
+
+# 20. Learning Path: проекция knowledge graph под цель
+
+Learning Path не дублирует карту знаний. `Concept` и `ConceptRelation` остаются общими источниками семантики и evidence, а path хранит выбранный маршрут для одной `LearningGoal`: контекстные nodes, направленные edges, прикреплённые resources, current position, suggestions и immutable version snapshots.
+
+```text
+LearningGoal 1 ── * LearningPath 1 ── * Node * ── * Resource
+                                  └── * Edge
+                                  └── * Suggestion
+                                  └── * Version snapshot
+Node * ── 0..1 Concept ── 0..1 ConceptState
+```
+
+Модульный монолит сохраняет границы:
+
+- `domain.py` — cycle/availability/completion rules без I/O;
+- `planner.py` — заменяемый interface и deterministic rule-based implementation;
+- `application.py` — единственная точка структурных записей, optimistic concurrency, versions и outbox;
+- `infrastructure.py` — PostgreSQL/SQLAlchemy models и repository;
+- `api.py`/`schemas.py` — HTTP contracts и aggregate read model.
+
+Availability вычисляется только по структурным edges. `returns_to` отображает возвращение из remediation branch, но не входит в DAG. Completion policy v0 намеренно ограничена проверками completed resources, Knowledge State dimensions и evidence counts. Path читает Knowledge State, но завершение node не создаёт искусственное mastery.
+
+Planner v0 начинает с target concepts, рекурсивно включает `prerequisite_of`, сортирует DAG, переводит хорошо освоенные prerequisites в optional/already-known context и прикрепляет только материалы с явным `metadata.concept_ids`. Этот interface допускает будущий LLM planner, но любой его результат будет проходить те же domain validators и останется suggestion/draft до подтверждения пользователя.

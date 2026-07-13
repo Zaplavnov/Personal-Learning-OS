@@ -8,6 +8,14 @@ from app.modules.knowledge_state.infrastructure import (
     ReviewAttempt,
     ReviewItem,
 )
+from app.modules.learning_paths.infrastructure import (
+    LearningPath,
+    LearningPathEdge,
+    LearningPathNode,
+    LearningPathNodeResource,
+    LearningPathSuggestion,
+    LearningPathVersion,
+)
 from app.modules.learning_spaces.infrastructure import LearningGoal, LearningSpace
 from app.modules.materials.infrastructure import LearningSession, Material, Note
 from app.modules.outbox.models import OutboxEvent
@@ -22,6 +30,12 @@ __all__ = [
     "ConceptState",
     "Job",
     "LearningGoal",
+    "LearningPath",
+    "LearningPathEdge",
+    "LearningPathNode",
+    "LearningPathNodeResource",
+    "LearningPathSuggestion",
+    "LearningPathVersion",
     "LearningSession",
     "LearningSpace",
     "Material",

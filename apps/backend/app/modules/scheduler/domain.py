@@ -98,6 +98,22 @@ class MaterialInput:
 
 
 @dataclass(frozen=True)
+class PathResourceInput:
+    path_id: UUID
+    path_title: str
+    node_id: UUID
+    node_title: str
+    node_status: str
+    concept_id: UUID | None
+    learning_space_id: UUID
+    resource_id: UUID
+    resource_type: str
+    source_id: UUID | None
+    resource_title: str
+    estimated_minutes: int
+
+
+@dataclass(frozen=True)
 class SchedulerInputs:
     context: ActiveContext = field(default_factory=ActiveContext)
     due_reviews: tuple[DueReviewInput, ...] = ()
@@ -105,6 +121,7 @@ class SchedulerInputs:
     low_concepts: tuple[LowConceptInput, ...] = ()
     open_gaps: tuple[OpenGapInput, ...] = ()
     materials: tuple[MaterialInput, ...] = ()
+    path_resources: tuple[PathResourceInput, ...] = ()
     average_stability: float = 0
     average_confidence: float = 0
     state_count: int = 0
@@ -159,6 +176,40 @@ def build_candidates(inputs: SchedulerInputs, now: datetime) -> list[SchedulerCa
                 ),
                 action_url=f"/reviews?reviewId={review.id}",
                 target_dimension=review_dimensions.get(review.review_type, "понимание"),
+            )
+        )
+    resource_types = {
+        "material": (CalendarItemType.MATERIAL_SESSION, "структуру"),
+        "review_template": (CalendarItemType.REVIEW, "воспроизведение"),
+        "practice": (CalendarItemType.PRACTICE, "применение"),
+        "explanation": (CalendarItemType.EXPLAIN, "объяснение"),
+        "project_task": (CalendarItemType.PRACTICE, "применение"),
+    }
+    for resource in inputs.path_resources:
+        item_type, dimension = resource_types[resource.resource_type]
+        action_url = (
+            f"/materials/{resource.source_id}"
+            if resource.resource_type == "material" and resource.source_id
+            else f"/concepts/{resource.concept_id}"
+            if resource.concept_id
+            else f"/spaces/{resource.learning_space_id}/paths/{resource.path_id}"
+        )
+        candidates.append(
+            SchedulerCandidate(
+                item_type=item_type,
+                source_type="learning_path_node_resource",
+                source_id=resource.resource_id,
+                learning_space_id=resource.learning_space_id,
+                title=f"{resource.node_title}: {resource.resource_title}",
+                estimated_minutes=resource.estimated_minutes,
+                priority=980 if resource.node_status == "current" else 930,
+                rationale=(
+                    f"Текущий обязательный шаг пути «{resource.path_title}»."
+                    if resource.node_status == "current"
+                    else f"Доступный обязательный шаг пути «{resource.path_title}»."
+                ),
+                action_url=action_url,
+                target_dimension=dimension,
             )
         )
     for gap in inputs.open_gaps:

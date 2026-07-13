@@ -66,3 +66,18 @@ python -m app.db.seed_demo
 ```
 
 Demo seed добавляет воспроизводимый полный цикл и безопасен для повторного запуска.
+
+## Learning Path
+
+`app/modules/learning_paths` — отдельная проекция существующего concept graph под конкретную Learning Goal. Модуль разделён на domain rules, application use cases, SQLAlchemy infrastructure, API schemas/routes и заменяемый planner interface.
+
+Правила v0:
+
+- `sequence`, `prerequisite`, `optional_branch` и `remediation` участвуют в availability и обязаны оставаться acyclic; `returns_to` — визуальная связь возврата и не блокирует узлы;
+- required predecessor должен быть completed/skipped до открытия следующего узла; optional ветка не блокирует основной маршрут;
+- completion policy поддерживает верхнеуровневые `all` и `any` с условиями `resource_type/minimum_completed`, `dimension/minimum_score` и `evidence_type/minimum_count`;
+- завершение узла двигает current position, но не выставляет Knowledge State;
+- active path меняется с optimistic `expected_version`; каждое структурное изменение создаёт snapshot;
+- rule engine создаёт remediation suggestion при слабом отсутствующем prerequisite, но применяет её только после Accept.
+
+Основные контракты находятся под `/api/v1/learning-paths`, генерация draft — `POST /api/v1/learning-goals/{goal_id}/path/generate-draft`, история — `/learning-paths/{path_id}/versions`. Полный detail read model возвращает goal, nodes/edges/resources, concept state, progress, current/available nodes, blockers, pending suggestions и последнюю версию.

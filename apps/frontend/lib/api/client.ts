@@ -293,6 +293,99 @@ export type CalendarItem = {
   updated_at: string;
 };
 
+export type LearningPathStatus = "draft" | "active" | "paused" | "completed" | "archived";
+export type PathNodeStatus = "planned" | "available" | "current" | "completed" | "blocked" | "skipped";
+export type PathNodeImportance = "required" | "recommended" | "optional";
+export type PathEdgeType = "sequence" | "prerequisite" | "optional_branch" | "remediation" | "returns_to";
+export type PathResourceType = "material" | "review_template" | "practice" | "explanation" | "project_task";
+export type LearningPath = {
+  id: string;
+  user_id: string;
+  learning_space_id: string;
+  learning_goal_id: string;
+  title: string;
+  description: string | null;
+  status: LearningPathStatus;
+  current_node_id: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+};
+export type PathNodeResource = {
+  id: string;
+  node_id: string;
+  resource_type: PathResourceType;
+  resource_id: string | null;
+  title: string;
+  is_required: boolean;
+  order_index: number;
+  completion_status: "planned" | "in_progress" | "completed" | "skipped";
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+export type PathNode = {
+  id: string;
+  learning_path_id: string;
+  concept_id: string | null;
+  node_type: "concept" | "capability" | "milestone";
+  title: string;
+  description: string | null;
+  position_x: number | null;
+  position_y: number | null;
+  status: PathNodeStatus;
+  importance: PathNodeImportance;
+  estimated_minutes: number | null;
+  completion_policy: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+  resources: PathNodeResource[];
+  state: Pick<ConceptState, "recall" | "explanation" | "application" | "stability" | "confidence"> | null;
+  completion_met: boolean;
+  completion_blockers: string[];
+  blocked_reasons: string[];
+};
+export type PathEdge = {
+  id: string;
+  learning_path_id: string;
+  source_node_id: string;
+  target_node_id: string;
+  edge_type: PathEdgeType;
+  condition: Record<string, unknown> | null;
+  label: string | null;
+  created_at: string;
+};
+export type PathSuggestion = {
+  id: string;
+  learning_path_id: string;
+  suggestion_type: "add_node" | "add_branch" | "reorder" | "attach_resource" | "mark_blocked" | "skip_node";
+  payload: Record<string, unknown>;
+  rationale: string;
+  source: "rule_engine" | "knowledge_state" | "user" | "llm";
+  status: "pending" | "accepted" | "rejected" | "expired";
+  created_at: string;
+  resolved_at: string | null;
+};
+export type PathVersion = {
+  id: string;
+  learning_path_id: string;
+  version: number;
+  snapshot: Record<string, unknown>;
+  change_summary: string;
+  change_source: string;
+  created_at: string;
+};
+export type LearningPathDetail = {
+  path: LearningPath;
+  goal: { id: string; title: string; description: string | null };
+  nodes: PathNode[];
+  edges: PathEdge[];
+  progress: { completed: number; total: number; required_completed: number; required_total: number; percent: number };
+  current_node: PathNode | null;
+  available_next_node_ids: string[];
+  pending_suggestions: PathSuggestion[];
+  latest_version: PathVersion | null;
+};
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -437,6 +530,11 @@ export const backendApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  listConcepts: (learningSpaceId: string, signal?: AbortSignal) =>
+    apiRequest<Concept[]>(
+      `/api/v1/concepts?learning_space_id=${encodeURIComponent(learningSpaceId)}`,
+      { signal, cache: "no-store" },
+    ),
   createConceptRelation: (payload: {
     source_concept_id: string;
     target_concept_id: string;
@@ -537,4 +635,65 @@ export const backendApi = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
+  getGoalPath: (goalId: string, signal?: AbortSignal) =>
+    apiRequest<LearningPath | null>(`/api/v1/learning-goals/${goalId}/path`, {
+      signal,
+      cache: "no-store",
+    }),
+  generateLearningPath: (
+    goalId: string,
+    payload: { target_concept_ids: string[]; max_depth: number; title?: string },
+  ) =>
+    apiRequest<LearningPathDetail>(
+      `/api/v1/learning-goals/${goalId}/path/generate-draft`,
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
+  getLearningPath: (pathId: string, signal?: AbortSignal) =>
+    apiRequest<LearningPathDetail>(`/api/v1/learning-paths/${pathId}`, {
+      signal,
+      cache: "no-store",
+    }),
+  publishLearningPath: (pathId: string, expectedVersion: number) =>
+    apiRequest<LearningPathDetail>(`/api/v1/learning-paths/${pathId}/publish`, {
+      method: "POST",
+      body: JSON.stringify({ expected_version: expectedVersion }),
+    }),
+  addPathNode: (
+    pathId: string,
+    payload: {
+      expected_version: number;
+      concept_id: string | null;
+      node_type: PathNode["node_type"];
+      title: string;
+      importance: PathNodeImportance;
+      position_x?: number;
+      position_y?: number;
+      completion_policy?: Record<string, unknown>;
+      metadata?: Record<string, unknown>;
+    },
+  ) => apiRequest<{ path_version: number; node: PathNode }>(`/api/v1/learning-paths/${pathId}/nodes`, { method: "POST", body: JSON.stringify(payload) }),
+  updatePathNode: (pathId: string, nodeId: string, payload: Record<string, unknown>) =>
+    apiRequest<{ path_version: number; node: PathNode }>(`/api/v1/learning-paths/${pathId}/nodes/${nodeId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deletePathNode: (pathId: string, nodeId: string, expectedVersion: number) =>
+    apiRequest<{ path_version: number }>(`/api/v1/learning-paths/${pathId}/nodes/${nodeId}?expected_version=${expectedVersion}`, { method: "DELETE" }),
+  addPathEdge: (pathId: string, payload: { expected_version: number; source_node_id: string; target_node_id: string; edge_type: PathEdgeType; label?: string | null }) =>
+    apiRequest<{ path_version: number; edge: PathEdge }>(`/api/v1/learning-paths/${pathId}/edges`, { method: "POST", body: JSON.stringify(payload) }),
+  addPathResource: (pathId: string, nodeId: string, payload: { expected_version: number; resource_type: PathResourceType; resource_id: string | null; title: string; is_required: boolean; order_index?: number; completion_status?: PathNodeResource["completion_status"]; metadata?: Record<string, unknown> }) =>
+    apiRequest<{ path_version: number; resource: PathNodeResource }>(`/api/v1/learning-paths/${pathId}/nodes/${nodeId}/resources`, { method: "POST", body: JSON.stringify(payload) }),
+  updatePathResource: (pathId: string, resourceId: string, payload: Record<string, unknown>) =>
+    apiRequest<{ path_version: number; resource: PathNodeResource }>(`/api/v1/learning-paths/${pathId}/resources/${resourceId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  completePathNode: (pathId: string, nodeId: string, expectedVersion: number) =>
+    apiRequest<LearningPathDetail>(`/api/v1/learning-paths/${pathId}/nodes/${nodeId}/complete`, { method: "POST", body: JSON.stringify({ expected_version: expectedVersion }) }),
+  skipPathNode: (pathId: string, nodeId: string, expectedVersion: number) =>
+    apiRequest<LearningPathDetail>(`/api/v1/learning-paths/${pathId}/nodes/${nodeId}/skip`, { method: "POST", body: JSON.stringify({ expected_version: expectedVersion }) }),
+  createPathSuggestion: (pathId: string, payload: { expected_version: number; suggestion_type: PathSuggestion["suggestion_type"]; payload: Record<string, unknown>; rationale: string; source: PathSuggestion["source"] }) =>
+    apiRequest<PathSuggestion>(`/api/v1/learning-paths/${pathId}/suggestions`, { method: "POST", body: JSON.stringify(payload) }),
+  acceptPathSuggestion: (suggestionId: string, expectedVersion: number) =>
+    apiRequest<LearningPathDetail>(`/api/v1/learning-path-suggestions/${suggestionId}/accept`, { method: "POST", body: JSON.stringify({ expected_version: expectedVersion }) }),
+  rejectPathSuggestion: (suggestionId: string, expectedVersion: number) =>
+    apiRequest<PathSuggestion>(`/api/v1/learning-path-suggestions/${suggestionId}/reject`, { method: "POST", body: JSON.stringify({ expected_version: expectedVersion }) }),
+  listPathVersions: (pathId: string) =>
+    apiRequest<PathVersion[]>(`/api/v1/learning-paths/${pathId}/versions`, { cache: "no-store" }),
+  restorePathVersion: (pathId: string, version: number, expectedVersion: number) =>
+    apiRequest<LearningPathDetail>(`/api/v1/learning-paths/${pathId}/versions/${version}/restore`, { method: "POST", body: JSON.stringify({ expected_version: expectedVersion, change_summary: `Restored version ${version}` }) }),
 };

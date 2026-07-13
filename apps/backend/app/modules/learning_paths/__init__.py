@@ -1,0 +1,1 @@
+"""Collaboratively configurable learning paths."""

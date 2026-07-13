@@ -24,6 +24,11 @@ from app.common.models import TimestampMixin
 from app.db.base import Base
 from app.modules.concepts.infrastructure import Concept, ConceptRelation
 from app.modules.knowledge_state.infrastructure import ConceptState, ReviewItem
+from app.modules.learning_paths.infrastructure import (
+    LearningPath,
+    LearningPathNode,
+    LearningPathNodeResource,
+)
 from app.modules.learning_spaces.infrastructure import LearningGoal, LearningSpace
 from app.modules.materials.infrastructure import LearningSession, Material, Note
 from app.modules.scheduler.domain import (
@@ -33,6 +38,7 @@ from app.modules.scheduler.domain import (
     LowConceptInput,
     MaterialInput,
     OpenGapInput,
+    PathResourceInput,
     SchedulerInputs,
 )
 
@@ -153,6 +159,45 @@ class SqlAlchemySchedulerRepository:
             )
             for session, material in session_rows
         )
+        path_resource_rows = await self.session.execute(
+            select(LearningPath, LearningPathNode, LearningPathNodeResource)
+            .join(
+                LearningPathNode,
+                LearningPathNode.learning_path_id == LearningPath.id,
+            )
+            .join(
+                LearningPathNodeResource,
+                LearningPathNodeResource.node_id == LearningPathNode.id,
+            )
+            .where(
+                LearningPath.user_id == user_id,
+                LearningPath.status == "active",
+                LearningPathNode.status.in_(("current", "available")),
+                LearningPathNode.importance == "required",
+                LearningPathNodeResource.completion_status.in_(("planned", "in_progress")),
+            )
+            .order_by(
+                (LearningPathNode.status == "current").desc(),
+                LearningPathNodeResource.order_index,
+            )
+        )
+        path_resources = tuple(
+            PathResourceInput(
+                path.id,
+                path.title,
+                node.id,
+                node.title,
+                node.status,
+                node.concept_id,
+                path.learning_space_id,
+                resource.id,
+                resource.resource_type,
+                resource.resource_id,
+                resource.title,
+                min(node.estimated_minutes or 15, 30),
+            )
+            for path, node, resource in path_resource_rows
+        )
         prerequisite_ids = set(
             await self.session.scalars(
                 select(ConceptRelation.source_concept_id).where(
@@ -231,6 +276,7 @@ class SqlAlchemySchedulerRepository:
             low_concepts=low_concepts,
             open_gaps=open_gaps,
             materials=materials,
+            path_resources=path_resources,
             average_stability=float(summary[0] or 0),
             average_confidence=float(summary[1] or 0),
             state_count=int(summary[2] or 0),
